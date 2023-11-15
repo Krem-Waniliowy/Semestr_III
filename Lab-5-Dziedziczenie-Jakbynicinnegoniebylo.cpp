@@ -2,154 +2,144 @@
 
 using namespace std;
 
-class Drukarnia{
-    public:
-        // Zmienne klasy 'Drukarnia'
-        static int ilosc_drukarni;
-        string nazwa, adres, godzina_otwarcia, godzina_zamkniecia;
+class Zamowienia {
+public:
+    static int ilosc_zamowien; // zmienna statyczna do zliczania obiektów
 
-        // Konstruktor domyślny klasy 'Drukarnia'
-        Drukarnia(){
-            // Zwiększamy zmienną odpowiedzalną za liczenie ilości drukarni za każdym razem gdy utworzymy nową
-            ilosc_drukarni++;
-        }
+    string nazwa_zamowienia;
+    string imie_klienta;
+    string adres_klienta;
+    string info_druku;
+    int naklad;
 
-        // Konstruktor parametryczny klasy 'Drukarnia'
-        Drukarnia(const string nazwa, const string adres, const string godzina_otwarcia, const string godzina_zamkniecia)
-                : nazwa (nazwa), adres (adres), godzina_otwarcia (godzina_otwarcia), godzina_zamkniecia (godzina_zamkniecia) {
-            ilosc_drukarni++;
-        }
+    // konstruktor parametryczny;
+    Zamowienia(const string& order, const string& name, const string& address, const string& details, int qty)
+        : nazwa_zamowienia(order), imie_klienta(name), adres_klienta(address), info_druku(details), naklad(qty) {
+        ilosc_zamowien++;
+    }
 
-        // Destruktor klasy 'Drukarnia'
-        ~Drukarnia(){
-            ilosc_drukarni--;
-        }
+    // destruktor
+    ~Zamowienia() {
+        ilosc_zamowien--;
+    }
 
-        // Metoda wypisz klasy 'Drukarnia'
-        void wypisz(){
-            cout << "Drukarnia " << nazwa << " pracuje od godziny "
-                 << godzina_otwarcia << " do godziny " << godzina_zamkniecia << " pod adresem "
-                 << adres << endl;
-        }
+    // metoda wypisz()
+    void wypisz() const {
+        cout << "Nazwa zamowienia: " << nazwa_zamowienia << endl;
+        cout << "Imie klienta: " << imie_klienta << endl;
+        cout << "Adreas klienta: " << adres_klienta << endl;
+        cout << "Informacje o zamowieniu: " << info_druku << endl;
+        cout << "Naklad: " << naklad << endl;
+        cout << endl;
+    }
+
+    static void usunZamowienie() {
+        ilosc_zamowien--;
+    }
 };
 
-// Zmienna statyczna w zakresie klasy 'Drukarnia'
-int Drukarnia::ilosc_drukarni = 0;
+class Magazyn : public Zamowienia {
 
-// Podklasa klasy 'Drukarnia'
-class Stanowisko : public Drukarnia{
-    public:
-        // Zmienne klasy 'Stanowisko'
-        int ilosc_stanowisk = 0;
-        int ilosc_pracownikow = 2;
-        string nazwa0, adres0, godzina_otwarcia0, godzina_zamkniecia0;
-        Drukarnia *wsk1 = nullptr;
+public:
+    // zmienne
+    const int limit;
+    int ilosc_obiektow;
+    Zamowienia** pozycje;
 
-        // Konstruktor domyślny klasy 'Stanowisko'
-        Stanowisko() = default;
+    // konstruktor parametryczny
+    Magazyn(const string& order, const string& name, const string& address, const string& details, int qty, int storageLimit)
+        : Zamowienia(order, name, address, details, qty), limit(storageLimit), ilosc_obiektow(0) {
+        pozycje = new Zamowienia*[limit];
+    }
 
-        // Konstruktor parametryczny klasy 'Stanowisko'
-        Stanowisko(const string nazwa, const string adres, const string godziny_otwarcia, const string godziny_zamkniecia)
-                : Drukarnia(nazwa, adres, godziny_otwarcia, godziny_zamkniecia) {}
-
-        // Metoda 'dodaj' klasy 'Stanowisko'
-        void dodaj(){
-            if (ilosc_stanowisk + 1 > ilosc_pracownikow){
-                cout << "Brakuje pracownikow by obsadzic kolejne stanowisko\n";
-            }
-            else{
-                cout << "Podaj nazwe: ";
-                cin >> nazwa0;
-                cout << "Adres: ";
-                cin >> adres0;
-                cout << "Godziny otwarcia: ";
-                cin >> godzina_otwarcia0;
-                cout << "Godziny zamkniecia: ";
-                cin >> godzina_zamkniecia0;
-                Drukarnia nowa(nazwa0, adres0, godzina_otwarcia0, godzina_zamkniecia0);
-
-                Drukarnia* nowa_baza = new Drukarnia[ilosc_stanowisk + 1];
-
-                // kopiowanie do nowej tablicy
-                for (int i = 0; i < ilosc_stanowisk; i++) {
-                    nowa_baza[i] = wsk1[i];
-                }
-
-                // Dodanie nowego stanowiska
-                nowa_baza[ilosc_stanowisk] = nowa;
-                ilosc_stanowisk++;
-
-                // Zwolnienie starej tablicy i przypisanie nowej
-                delete[] wsk1;
-                wsk1 = nowa_baza;
-
-                cout << "Dodano nowa drukarnie do bazy." << endl;
-            }
+    // destruktor
+    ~Magazyn() {
+        for (int i = 0; i < ilosc_obiektow; ++i) {
+            delete pozycje[i];
         }
+        delete[] pozycje;
+    }
 
-        void usun(int x){
-            if(ilosc_stanowisk <= 1)
-            {
-                usun_wszystko();
-            }
-            else {
-                Drukarnia *nowa_baza = new Drukarnia[ilosc_stanowisk - 1];
-                int y = 0;
-                for (int i = 0; i < ilosc_stanowisk; i++) {
-                    if (i == x) {
-
-                    } else {
-                        nowa_baza[y] = wsk1[i];
-                        y++;
-                    }
-                }
-
-                // Zwolnienie starej tablicy i przypisanie nowej
-                delete[] wsk1;
-                wsk1 = nowa_baza;
-                ilosc_stanowisk--;
-            }
+    // metoda wypisz
+    void wypiszDostepneObiekty() {
+        for (int i = 0; i < ilosc_obiektow; ++i) {
+            cout << "\nPozycja nr." << (i + 1) << endl;
+            pozycje[i]->wypisz();
         }
-        void wypiszDrukarnie(){
-            wypisz();
-            for(int i = 0; i<ilosc_stanowisk; i++){
-                cout << "Nazwa: " << (wsk1+i)->nazwa
-                     << "\n" << "Adres: " << (wsk1+i)->adres << "\n"
-                     << "Godzina otwarcia: " << (wsk1+i)->godzina_otwarcia << "\n" << "Godzina zamkniecia: "
-                     <<(wsk1+i)->godzina_zamkniecia<< endl;
+    }
 
+    // metoda dodaj
+    void dodajObiekt(Zamowienia* nowaPozycja) {
+        if (ilosc_obiektow < limit) {
+            pozycje[ilosc_obiektow] = nowaPozycja;
+            ilosc_obiektow++;
+        }
+        else {
+            cout << "Magazyn osiagnal limit!" << endl;
+        }
+    }
+
+    // metoda usun
+    void usunObiekt(int indeks) {
+        if (indeks >= 0 && indeks < ilosc_obiektow) {
+            delete pozycje[indeks];
+            for (int i = indeks; i < ilosc_obiektow - 1; ++i) {
+                pozycje[i] = pozycje[i + 1];
             }
+            ilosc_obiektow--;
+        } else {
+            cout << "Nieprawidlowy indeks obiektu do usuniecia!" << endl;
         }
-        void usun_wszystko(){
-            delete[] wsk1;
-        }
+    }
 };
 
-int main(void){
-    Stanowisko *Stanowisko_A = new Stanowisko("Gabinet 1", "tutaj 12", "12:40", "13:00"),
-            *Stanowisko_B,
-            *Stanowisko_C = new Stanowisko("Nowy", "Tam 12", "11:12", "21:11");
+int Zamowienia::ilosc_zamowien = 0;
 
-    for(int i = 0; i < 2; i++)
-        Stanowisko_A->dodaj();
-    Stanowisko_A->wypiszDrukarnie();
-    Stanowisko_A->dodaj();
-    Stanowisko_A->usun(0);
-    cout << "Usunieto przychodnie! \n";
-    Stanowisko_A->wypiszDrukarnie();
-    Stanowisko_A->dodaj();
-    cout << endl << endl << Drukarnia::ilosc_drukarni<<endl << endl;
-    Stanowisko_A->wypiszDrukarnie();
-    Stanowisko_A->usun_wszystko();
-    delete Stanowisko_A;
-    cout << Drukarnia::ilosc_drukarni << endl;
-    Stanowisko_B= new Stanowisko("Drukowanie", "12 maja", "00:00", "01:00");
-    Stanowisko_B->dodaj();
-    Stanowisko_C->wypisz();
-    delete Stanowisko_B;
-    delete Stanowisko_C;
-    cout << "usunieto wszystko";
+int main(void) {
+    // stworzenie domyślnego magazynu Magazyn_A
+    Magazyn Magazyn_A("Zamowienie_A", "Klient_A", "Adres_A", "Info_A", 100, 5);
 
+    // dodanie co najmniej jednego obiektu do Magazyn_A
+    Magazyn_A.dodajObiekt(new Zamowienia("Zamowienie_A1", "Klient_A1", "Adres_A1", "Info_A1", 200));
+
+    // stworzenie obiektów Magazyn_B i Magazyn_C zgodnie z opisem
+    Magazyn Magazyn_B("Zamowienie_B", "Klient_B", "Adres_B", "Info_B", 150, 5);
+    Magazyn Magazyn_C("Zamowienie_C", "Klient_C", "Adres_C", "Info_C", 120, 5);
+
+    Magazyn_B.dodajObiekt(new Zamowienia("Zamowienie_B1", "Klient_B1", "Adres_B1", "Info_B1", 70));
+    Magazyn_B.dodajObiekt(new Zamowienia("Zamowienie_B2", "Klient_B2", "Adres_B2", "Info_B2", 56));
+    Magazyn_C.dodajObiekt(new Zamowienia("Zamowienie_C1", "Klient_C1", "Adres_C1", "Info_C1", 123));
+    Magazyn_C.dodajObiekt(new Zamowienia("Zamowienie_C2", "Klient_C2", "Adres_C2", "Info_C2", 240));
+
+    // usunięcie jednego obiektu z Magazyn_B
+    Magazyn_B.usunObiekt(0);
+
+    // wypisanie dostępnych obiektów w każdym z magazynów
+    cout << "Obiekty w Magazynie_A:" << endl;
+    Magazyn_A.wypiszDostepneObiekty();
+
+    cout << "Obiekty w Magazynie_B:" << endl;
+    Magazyn_B.wypiszDostepneObiekty();
+
+    cout << "Obiekty w Magazynie_C:" << endl;
+    Magazyn_C.wypiszDostepneObiekty();
+
+    // usuniecie reszty obiektow i sprawdzenie ilosci
+    for (int i = 0; i < Magazyn_A.ilosc_obiektow; ++i) {
+        Magazyn_A.usunObiekt(0);
+    }
+
+    for (int i = 0; i < Magazyn_B.ilosc_obiektow; ++i) {
+        Magazyn_B.usunObiekt(0);
+    }
+
+    for (int i = 0; i < Magazyn_C.ilosc_obiektow; ++i) {
+        Magazyn_C.usunObiekt(0);
+    }
+
+    cout << "Ilosc obiektow w Magazynie_A: " << Magazyn_A.ilosc_obiektow << endl;
+    cout << "Ilosc obiektow w Magazynie_B: " << Magazyn_B.ilosc_obiektow << endl;
+    cout << "Ilosc obiektow w Magazynie_C: " << Magazyn_C.ilosc_obiektow << endl;
 
     return 0;
 }
